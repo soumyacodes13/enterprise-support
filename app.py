@@ -160,7 +160,7 @@ if file is not None:
 
             if not high_rev_low_margin.empty:
                 high_cost_in_low_margin = high_rev_low_margin["Cost"].mean() > df["Cost"].mean()
-                st.info(f"High-rev low-margin items have {'higher' if high_cost_in_low_margin else 'similar'} costs than average. Likely pricing or efficiency issue.")
+                st.info(f"High-rev low-margin items have {'higher' if high_cost_in_low_margin else 'similar'} costs than average")
                 if "Supplier" in df.columns:
                     supp_in_low = high_rev_low_margin.groupby("Supplier")["Cost"].mean().sort_values(ascending=False).index[0]
                     st.info(f"Common supplier in these items: {supp_in_low}.")
@@ -186,7 +186,7 @@ if file is not None:
                 st.success(f"For low-margin {worst_product} in {worst_region_in_product}, consider product redesign or supplier change.")
 
             #AI Executive Summary
-            st.header("🤖 AI Executive Summary (Free via GitHub Models)")
+            st.header("🤖 AI Executive Summary")
             load_dotenv()
             if st.button("Generate AI Business Summary"):
                 with st.spinner("Analyzing with AI (using free GitHub Models)..."):
