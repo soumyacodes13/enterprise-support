@@ -1,3 +1,5 @@
-streamlit==1.29.0
-pandas==2.1.4
-altair==5.2.0  # For charts
+streamlit>=1.38.0
+pandas>=2.0.0
+openai>=1.0.0
+python-dotenv>=1.0.0
+charset-normalizer>=3.0.0
