@@ -220,7 +220,7 @@ if file is not None:
             - Root causes
             - 3-5 prioritized actionable recommendations
             Be direct, use numbers, speak in professional business language."""
-                    api_key = st.secrets.get("OPENAI_API_KEY")
+                    api_key = st.secrets.get("GITHUB_TOKEN")
                     try:
                         # Initialize client with GitHub Models
                         client = OpenAI(
