@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import altair as alt  # For better charts; add to requirements.txt
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
@@ -11,7 +10,7 @@ st.set_page_config(page_title="Enterprise Decision Support System", layout="wide
 st.title("📊 Enterprise Analytics & Decision Support System")
 st.subheader("Upload business data to get decisions, not just charts.")
 
-# Step 1: File Upload
+#File Upload
 file = st.file_uploader("Upload your sales data (CSV)", type=["csv"])
 
 if file is not None:
@@ -23,11 +22,10 @@ if file is not None:
             file.seek(0)  # reset file pointer
 
             df = pd.read_csv(file, encoding=encoding)
-            # st.info(f"Detected encoding: {encoding}")
 
-            # df = pd.read_csv(file)
+
             df.rename(columns={'Sale_Date':'Date'},inplace=True)
-            # After df = pd.read_csv(...) and renaming
+
 
             if 'Profit' in df.columns:
                 df['Cost'] = df['Sales_Amount'] - df['Profit']
@@ -35,14 +33,13 @@ if file is not None:
                 df['Unit_Cost'] = df['Unit_Cost'].round(2)
                 st.success("Unit_Cost calculated accurately using Profit = Sales - Cost")
             else:
-                # Fallback if no Profit column (rare in Superstore)
                 assumed_margin = 0.35
                 df['Unit_Price'] = df['Sales_Amount'] / df['Quantity_Sold'].replace(0, 1)
                 df['Unit_Cost'] = df['Unit_Price'] * (1 - assumed_margin)
                 df['Cost'] = df['Unit_Cost'] * df['Quantity_Sold']
                 df['Profit'] = df['Sales_Amount'] - df['Cost']
                 st.info(f"No Profit column → assumed {assumed_margin*100:.0f}% gross margin to estimate Unit_Cost")
-            # Step 2: Validate Columns
+            #Validate Columns
             required_cols = ["Sales_Amount", "Unit_Cost", "Quantity_Sold", "Region", "Product_Category"]
             optional_cols = ["Date", "Supplier"]  # For advanced analysis
             missing_required = [col for col in required_cols if col not in df.columns]
@@ -50,11 +47,11 @@ if file is not None:
                 st.error(f"Missing required columns: {', '.join(missing_required)}")
                 st.stop()
 
-            # Handle Missing Values & Conversions
+            #Handle Missing Values & Conversions
             numeric_cols = ["Sales_Amount", "Unit_Cost", "Quantity_Sold"]
             for col in numeric_cols:
                 df[col] = pd.to_numeric(df[col], errors='coerce')
-            # Fix missing values
+            #Fix missing values
             df[numeric_cols] = df[numeric_cols].fillna(0)
 
 
@@ -63,24 +60,24 @@ if file is not None:
                 if df["Date"].isna().any():
                     st.warning("Some dates could not be parsed")
 
-            # Check optional columns
+            #Check optional columns
             if "Supplier" not in df.columns:
                 st.info("Supplier column missing")
             if "Date" not in df.columns:
                 st.info("Date column missing")
 
-            # Derived Columns 
+            #Derived Columns 
             df["Cost"] = df["Unit_Cost"] * df["Quantity_Sold"]
             df["Revenue"] = df["Sales_Amount"]
             df["Profit"] = df["Revenue"] - df["Cost"]
             df["Profit_Margin"] = (df["Profit"] / df["Revenue"].replace(0, float('nan'))) * 100
-            df["Profit_Margin"] = df["Profit_Margin"].fillna(0)  # Fill NaN margins with 0 for averaging
+            df["Profit_Margin"] = df["Profit_Margin"].fillna(0)  # Fill nan margins with 0 for averaging
             
             st.success("Data loaded,validated,and metrics calculated.")
             with st.expander("View full data preview"):
                 st.dataframe(df)
 
-            # Insight Engine
+            #Insight Engine
             st.header("🔍 Performance Summary")
             total_revenue = df["Revenue"].sum()
             total_cost = df["Cost"].sum()
@@ -103,7 +100,7 @@ if file is not None:
                 else:
                     st.info("Not enough date data for growth analysis")
 
-            # Problem Detection
+            #Problem Detection
             st.header("⚠️ Problem Detection")
             # Negative Profits
             negative_profits = df[df["Profit"] < 0]
@@ -112,19 +109,19 @@ if file is not None:
                 with st.expander("Details"):
                     st.dataframe(negative_profits[["Region", "Product_Category", "Revenue", "Cost", "Profit"]])
 
-            # Worst Region by Profit
+            #Worst Region by Profit
             region_profit = df.groupby("Region")["Profit"].sum().sort_values()
             if not region_profit.empty:
                 worst_region = region_profit.index[0]
                 st.warning(f"Worst region: {worst_region} (Profit: ${region_profit.iloc[0]:,.2f})")
 
-            # Worst Product by Margin
+            #Worst Product by Margin
             product_margin = df.groupby("Product_Category")["Profit_Margin"].mean().sort_values()
             if not product_margin.empty:
                 worst_product = product_margin.index[0]
                 st.warning(f"Worst product category: {worst_product} (Margin: {product_margin.iloc[0]:.2f}%)")
 
-            # High Revenue but Low Margin
+            #High Revenue but Low Margin
             high_rev_low_margin = df[(df["Revenue"] > df["Revenue"].quantile(0.75)) & (df["Profit_Margin"] < df["Profit_Margin"].quantile(0.25))]
             if not high_rev_low_margin.empty:
                 st.warning(f"{len(high_rev_low_margin)} high-revenue but low-margin items. Avg Margin: {high_rev_low_margin['Profit_Margin'].mean():.2f}%")
@@ -137,7 +134,7 @@ if file is not None:
                 rev_growth = df_monthly['Revenue'].pct_change().mean() * 100
                 if cost_growth > rev_growth:
                     st.warning(f"Costs growing faster than revenue ({cost_growth:.2f}% vs {rev_growth:.2f}%). Potential inefficiency.")
-            # Root Cause Analysis
+            #Root Cause Analysis
             st.header("🕵️ Root Cause Analysis")
             if not negative_profits.empty:
                 worst_in_neg = negative_profits.groupby("Region")["Profit"].sum().sort_values().index[0]
@@ -168,7 +165,7 @@ if file is not None:
                     supp_in_low = high_rev_low_margin.groupby("Supplier")["Cost"].mean().sort_values(ascending=False).index[0]
                     st.info(f"Common supplier in these items: {supp_in_low}.")
 
-            # Decision Suggestions
+            #Decision Suggestions
             st.header("💡 Actionable Recommendations")
             if total_profit < 0:
                 st.success("Overall losses detected. Prioritize broad cost reduction and review all operations for inefficiencies.")
@@ -188,7 +185,7 @@ if file is not None:
             if not product_margin.empty:
                 st.success(f"For low-margin {worst_product} in {worst_region_in_product}, consider product redesign or supplier change.")
 
-            # AI Executive Summary
+            #AI Executive Summary
             st.header("🤖 AI Executive Summary (Free via GitHub Models)")
             load_dotenv()
             if st.button("Generate AI Business Summary"):
@@ -223,17 +220,16 @@ if file is not None:
             - Root causes
             - 3-5 prioritized actionable recommendations
             Be direct, use numbers, speak in professional business language."""
-
+                    api_key = st.secrets.get("OPENAI_API_KEY")
                     try:
                         # Initialize client with GitHub Models
                         client = OpenAI(
                             base_url="https://models.github.ai/inference",
-                            api_key=os.getenv("GITHUB_TOKEN")   # ← your ghp_ token
+                            api_key=api_key
                         )
                         
                         response = client.chat.completions.create(
-                            model="Meta-Llama-3.1-8B-Instruct",   # free & reliable open model
-                            # model="openai/gpt-4o-mini"          # try this if available
+                            model="Meta-Llama-3.1-8B-Instruct",
                             messages=[{"role": "user", "content": prompt}],
                             temperature=0.7,
                             max_tokens=500
