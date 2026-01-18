@@ -5,17 +5,7 @@ import os
 from dotenv import load_dotenv
 from charset_normalizer import detect
 
-# At top of script
-st.markdown("""
-<style>
-div[data-testid="stTabs"] {
-    width: 200% !important;
-}
-div[data-testid="column"] {
-    width: 200% !important;
-}
-</style>
-""", unsafe_allow_html=True)
+
 
 st.set_page_config(page_title="Enterprise Decision Support System", layout="wide")
 
@@ -31,10 +21,10 @@ if file is not None:
             raw = file.read()
             result = detect(raw)
             encoding = result['encoding'] or 'utf-8'
-            file.seek(0)  # reset file pointer
+            file.seek(0)  
 
             df = pd.read_csv(file, encoding=encoding)
-            # st.info(f"Detected encoding: {encoding}")
+
 
             # df = pd.read_csv(file)
             df.rename(columns={'Sale_Date':'Date'},inplace=True)
@@ -46,7 +36,7 @@ if file is not None:
                 df['Unit_Cost'] = df['Unit_Cost'].round(2)
                 st.success("Unit_Cost calculated accurately using Profit = Sales - Cost")
             else:
-                # Fallback if no Profit column (rare in Superstore)
+                # Fallback if no Profit column
                 assumed_margin = 0.35
                 df['Unit_Price'] = df['Sales_Amount'] / df['Quantity_Sold'].replace(0, 1)
                 df['Unit_Cost'] = df['Unit_Price'] * (1 - assumed_margin)
